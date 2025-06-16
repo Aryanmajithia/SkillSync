@@ -1,0 +1,34 @@
+{
+  "name": "skillsync",
+  "version": "1.0.0",
+  "description": "AI-powered job search and interview platform",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:frontend\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "build:server": "cd server && npm install",
+    "start": "cd server && npm start",
+    "install:all": "npm install && cd server && npm install && cd ../frontend && npm install"
+  },
+  "keywords": [
+    "job-search",
+    "ai",
+    "interview",
+    "resume",
+    "stripe",
+    "react",
+    "nodejs",
+    "mongodb"
+  ],
+  "author": "Aryan Majithia",
+  "license": "MIT",
+  "dependencies": {
+    "@stripe/react-stripe-js": "^3.7.0",
+    "@stripe/stripe-js": "^7.3.1"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

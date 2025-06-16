@@ -1,21 +1,26 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
+import { jobService } from "../services/jobService";
 import { MapPin, DollarSign, Clock, Building, Briefcase } from "lucide-react";
 import JobApplicationForm from "../components/JobApplicationForm";
+import { Button } from "../components/ui/button";
+import { useAuth } from "../hooks/useAuth";
 
 const JobDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [showApplicationForm, setShowApplicationForm] = useState(false);
+  const { user } = useAuth();
 
-  const { data: job, isLoading } = useQuery({
+  const {
+    data: job,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["job", id],
-    queryFn: async () => {
-      const response = await axios.get(`/api/jobs/${id}`);
-      return response.data;
-    },
+    queryFn: () => jobService.getJob(id),
+    enabled: !!id,
   });
 
   if (isLoading) {
@@ -26,19 +31,16 @@ const JobDetails = () => {
     );
   }
 
-  if (!job) {
+  if (error || !job) {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-semibold text-gray-900">Job not found</h2>
         <p className="mt-2 text-gray-600">
           The job you're looking for doesn't exist or has been removed.
         </p>
-        <button
-          onClick={() => navigate("/jobs")}
-          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-        >
+        <Button onClick={() => navigate("/jobs")} className="mt-4">
           Browse Jobs
-        </button>
+        </Button>
       </div>
     );
   }
@@ -53,12 +55,15 @@ const JobDetails = () => {
               <p className="text-lg text-gray-600 mt-1">{job.company}</p>
             </div>
             <div className="text-right">
-              <span className="inline-block px-3 py-1 text-sm font-semibold text-blue-600 bg-blue-100 rounded-full">
-                {job.type}
+              <span className="inline-block px-3 py-1 text-sm font-semibold text-blue-600 bg-blue-100 rounded-full capitalize">
+                {job.type.replace("-", " ")}
               </span>
-              <p className="text-xl font-bold text-gray-900 mt-2">
-                ${job.salary}
-              </p>
+              {job.salary && (
+                <p className="text-xl font-bold text-gray-900 mt-2">
+                  ${job.salary.min?.toLocaleString()} - $
+                  {job.salary.max?.toLocaleString()}
+                </p>
+              )}
             </div>
           </div>
 
@@ -73,7 +78,7 @@ const JobDetails = () => {
             </div>
             <div className="flex items-center text-gray-600">
               <Briefcase className="w-5 h-5 mr-2" />
-              <span>{job.experience}</span>
+              <span className="capitalize">{job.experience} level</span>
             </div>
             <div className="flex items-center text-gray-600">
               <Clock className="w-5 h-5 mr-2" />
@@ -92,41 +97,58 @@ const JobDetails = () => {
             </div>
           </div>
 
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold text-gray-900">
-              Requirements
-            </h2>
-            <ul className="mt-4 list-disc list-inside text-gray-700">
-              {job.requirements.map((requirement, index) => (
-                <li key={index}>{requirement}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold text-gray-900">Skills</h2>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {job.skills.map((skill) => (
-                <span
-                  key={skill}
-                  className="px-3 py-1 text-sm text-gray-600 bg-gray-100 rounded-full"
-                >
-                  {skill}
-                </span>
-              ))}
+          {job.requirements && job.requirements.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Requirements
+              </h2>
+              <ul className="mt-4 list-disc list-inside text-gray-700">
+                {job.requirements.map((requirement, index) => (
+                  <li key={index}>{requirement}</li>
+                ))}
+              </ul>
             </div>
-          </div>
+          )}
+
+          {job.skills && job.skills.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold text-gray-900">Skills</h2>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {job.skills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="px-3 py-1 text-sm text-gray-600 bg-gray-100 rounded-full"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="mt-8 border-t pt-8">
-            {showApplicationForm ? (
+            {!user ? (
+              <div className="text-center">
+                <p className="text-gray-600 mb-4">
+                  Please log in to apply for this job
+                </p>
+                <Button onClick={() => navigate("/login")}>
+                  Login to Apply
+                </Button>
+              </div>
+            ) : user.role === "employer" ? (
+              <div className="text-center">
+                <p className="text-gray-600">Employers cannot apply for jobs</p>
+              </div>
+            ) : showApplicationForm ? (
               <JobApplicationForm jobId={job._id} />
             ) : (
-              <button
+              <Button
                 onClick={() => setShowApplicationForm(true)}
-                className="w-full bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors"
+                className="w-full"
               >
                 Apply Now
-              </button>
+              </Button>
             )}
           </div>
         </div>

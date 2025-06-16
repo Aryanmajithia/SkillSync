@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext, useContext } from "react";
-import axios from "axios";
+import api from "../lib/axios";
 
 const AuthContext = createContext(undefined);
 
@@ -14,13 +14,14 @@ export const AuthProvider = ({ children }) => {
   const checkAuth = async () => {
     try {
       const token = localStorage.getItem("token");
+      console.log("Checking auth with token:", token ? "exists" : "none");
       if (token) {
-        const response = await axios.get("/api/auth/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await api.get("/api/auth/me");
+        console.log("Auth check response:", response.data);
         setUser(response.data);
       }
     } catch (error) {
+      console.error("Auth check error:", error);
       localStorage.removeItem("token");
     } finally {
       setLoading(false);
@@ -28,14 +29,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
-    const response = await axios.post("/api/auth/login", { email, password });
+    const response = await api.post("/api/auth/login", { email, password });
     const { token, user } = response.data;
     localStorage.setItem("token", token);
     setUser(user);
   };
 
   const register = async (data) => {
-    const response = await axios.post("/api/auth/register", data);
+    const response = await api.post("/api/auth/register", data);
     const { token, user } = response.data;
     localStorage.setItem("token", token);
     setUser(user);

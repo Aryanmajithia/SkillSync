@@ -13,16 +13,16 @@ import {
 const SearchBar = ({ onSearch }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [location, setLocation] = useState("");
-  const [jobType, setJobType] = useState("");
-  const [experience, setExperience] = useState("");
+  const [jobType, setJobType] = useState("all");
+  const [experience, setExperience] = useState("all");
 
   const handleSearch = (e) => {
     e.preventDefault();
     onSearch({
       query: searchQuery,
       location,
-      jobType,
-      experience,
+      jobType: jobType === "all" ? "" : jobType,
+      experience: experience === "all" ? "" : experience,
     });
   };
 
@@ -53,7 +53,7 @@ const SearchBar = ({ onSearch }) => {
               <SelectValue placeholder="Job Type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Types</SelectItem>
+              <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="full-time">Full Time</SelectItem>
               <SelectItem value="part-time">Part Time</SelectItem>
               <SelectItem value="contract">Contract</SelectItem>
@@ -67,7 +67,7 @@ const SearchBar = ({ onSearch }) => {
               <SelectValue placeholder="Experience" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Levels</SelectItem>
+              <SelectItem value="all">All Levels</SelectItem>
               <SelectItem value="entry">Entry Level</SelectItem>
               <SelectItem value="mid">Mid Level</SelectItem>
               <SelectItem value="senior">Senior Level</SelectItem>

@@ -1,109 +1,243 @@
-# SkillSync - AI-Powered Tech Talent Marketplace
+# SkillSync - AI-Powered Job Search Platform
 
-SkillSync is a modern platform that connects tech professionals with meaningful opportunities through AI-powered matchmaking and seamless collaboration tools.
+A comprehensive job search and interview platform powered by AI, featuring resume analysis, AI interviews, job matching, and premium subscription features.
 
 ## 🚀 Features
 
-- **Smart Matchmaking**: AI-based candidate recommendations
-- **Real-time Communication**: Built-in messaging system
-- **Secure Payments**: Virtual credits and subscription management
-- **Professional Profiles**: Rich profile management with resume uploads
-- **Job Management**: Post jobs and manage applications
-- **Subscription Tiers**: Freemium model with premium features
+- **AI-Powered Resume Analysis** - Get detailed feedback and ATS optimization
+- **Smart Job Matching** - AI-driven job recommendations based on your profile
+- **Premium AI Interviews** - Practice with advanced AI interview simulations
+- **Application Tracking** - Monitor your job applications in real-time
+- **Stripe Integration** - Secure payment processing for premium features
+- **Real-time Chatbot** - AI-powered job search assistance
+- **Dark/Light Theme** - Beautiful, responsive UI with theme switching
 
-## 🛠 Tech Stack
+## 🛠️ Tech Stack
 
 ### Frontend
 
-- React.js (v19)
-- TailwindCSS
-- React Router
-- Axios
-- Framer Motion / ShadCN UI
-- JWT Authentication
+- **React 18** with Vite
+- **Tailwind CSS** for styling
+- **Framer Motion** for animations
+- **React Query** for data fetching
+- **Stripe** for payments
+- **Lucide React** for icons
 
 ### Backend
 
-- Node.js + Express.js
-- MongoDB
-- Redis
-- RabbitMQ
-- Elasticsearch
-- Cloudinary
-- Stripe/PayPal Integration
+- **Node.js** with Express
+- **MongoDB** with Mongoose
+- **JWT** for authentication
+- **Stripe** for payment processing
+- **Google Gemini AI** for AI features
+- **Multer** for file uploads
 
-### DevOps
-
-- Docker
-- Jenkins/GitHub Actions
-- New Relic/LogRocket
-- DigitalOcean/Render/AWS
-- Mailgun/SendGrid
-
-## 🏗 Project Structure
-
-```
-skillsync/
-├── frontend/           # React frontend application
-├── backend/           # Node.js backend application
-├── docker/           # Docker configuration files
-└── docs/             # Project documentation
-```
-
-## 🚀 Getting Started
+## 📦 Installation
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
-- Docker and Docker Compose
-- MongoDB
-- Redis
+- Node.js (v16 or higher)
+- MongoDB (local or Atlas)
+- Stripe account
+- Google Gemini API key
 
-### Installation
+### Local Development
 
-1. Clone the repository:
+1. **Clone the repository**
 
-```bash
-git clone https://github.com/yourusername/skillsync.git
-cd skillsync
-```
+   ```bash
+   git clone https://github.com/yourusername/skillsync.git
+   cd skillsync
+   ```
 
-2. Install dependencies:
+2. **Install dependencies**
 
-```bash
-# Frontend
-cd frontend
-npm install
+   ```bash
+   npm run install:all
+   ```
 
-# Backend
-cd ../backend
-npm install
-```
+3. **Environment Setup**
 
-3. Set up environment variables:
+   **Backend** (`server/.env`):
 
-```bash
-# Frontend
-cp frontend/.env.example frontend/.env
+   ```env
+   MONGODB_URI=mongodb://localhost:27017/skillsync
+   JWT_SECRET=your-super-secret-jwt-key
+   GEMINI_API_KEY=your-gemini-api-key
+   RAPIDAPI_KEY=your-rapidapi-key
+   STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
+   STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
+   STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+   PORT=5000
+   NODE_ENV=development
+   CORS_ORIGIN=http://localhost:5173
+   FRONTEND_URL=http://localhost:5173
+   ```
 
-# Backend
-cp backend/.env.example backend/.env
-```
+   **Frontend** (`frontend/.env`):
 
-4. Start the development environment:
+   ```env
+   VITE_API_URL=http://localhost:5000
+   VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
+   ```
 
-```bash
-docker-compose up
-```
+4. **Start development servers**
 
-## 📝 License
+   ```bash
+   npm run dev
+   ```
+
+   This will start both frontend (http://localhost:5173) and backend (http://localhost:5000)
+
+## 🚀 Deployment
+
+### 1. GitHub Setup
+
+1. **Initialize Git and push to GitHub**
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git branch -M main
+   git remote add origin https://github.com/yourusername/skillsync.git
+   git push -u origin main
+   ```
+
+### 2. Backend Deployment (Render)
+
+1. **Go to [Render.com](https://render.com) and sign up**
+2. **Create a new Web Service**
+3. **Connect your GitHub repository**
+4. **Configure the service:**
+
+   - **Name**: `skillsync-backend`
+   - **Environment**: `Node`
+   - **Build Command**: `cd server && npm install`
+   - **Start Command**: `cd server && npm start`
+   - **Plan**: Free
+
+5. **Add Environment Variables:**
+
+   - `NODE_ENV`: `production`
+   - `MONGODB_URI`: Your MongoDB Atlas connection string
+   - `JWT_SECRET`: Your JWT secret key
+   - `GEMINI_API_KEY`: Your Google Gemini API key
+   - `RAPIDAPI_KEY`: Your RapidAPI key
+   - `STRIPE_SECRET_KEY`: Your Stripe secret key
+   - `STRIPE_PUBLISHABLE_KEY`: Your Stripe publishable key
+   - `STRIPE_WEBHOOK_SECRET`: Your Stripe webhook secret
+   - `CORS_ORIGIN`: Your frontend URL (will be set after Vercel deployment)
+   - `FRONTEND_URL`: Your frontend URL
+
+6. **Deploy and note the URL** (e.g., `https://skillsync-backend.onrender.com`)
+
+### 3. Frontend Deployment (Vercel)
+
+1. **Go to [Vercel.com](https://vercel.com) and sign up**
+2. **Import your GitHub repository**
+3. **Configure the project:**
+
+   - **Framework Preset**: Vite
+   - **Root Directory**: `frontend`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+
+4. **Add Environment Variables:**
+
+   - `VITE_API_URL`: Your Render backend URL
+   - `VITE_STRIPE_PUBLISHABLE_KEY`: Your Stripe publishable key
+
+5. **Deploy**
+
+### 4. Update CORS Settings
+
+After both deployments are complete:
+
+1. **Go back to Render dashboard**
+2. **Update the environment variables:**
+
+   - `CORS_ORIGIN`: Your Vercel frontend URL
+   - `FRONTEND_URL`: Your Vercel frontend URL
+
+3. **Redeploy the backend service**
+
+## 🔧 Configuration
+
+### MongoDB Atlas Setup
+
+1. Create a free MongoDB Atlas account
+2. Create a new cluster
+3. Get your connection string
+4. Replace `<password>` with your database password
+5. Add the connection string to your environment variables
+
+### Stripe Setup
+
+1. Create a Stripe account
+2. Get your API keys from the dashboard
+3. Set up webhooks for production
+4. Update environment variables with your keys
+
+### Google Gemini AI
+
+1. Get API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Add to environment variables
+
+## 📱 Usage
+
+### For Job Seekers
+
+1. **Register/Login** to your account
+2. **Upload your resume** for AI analysis
+3. **Browse jobs** and apply
+4. **Practice interviews** with AI
+5. **Track applications** in your dashboard
+6. **Upgrade to premium** for advanced features
+
+### For Employers
+
+1. **Register as an employer**
+2. **Post job listings**
+3. **Review applications**
+4. **Manage candidates**
+
+## 🔒 Security Features
+
+- JWT-based authentication
+- Password hashing with bcrypt
+- CORS protection
+- Input validation
+- Secure file uploads
+- Stripe PCI compliance
+
+## 🧪 Testing
+
+### Stripe Test Cards
+
+- **Success**: `4242 4242 4242 4242`
+- **Decline**: `4000 0000 0000 0002`
+- **Requires Authentication**: `4000 0025 0000 3155`
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🤝 Contributing
 
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/yourusername/skillsync/issues).
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## 📧 Contact
+## 📞 Support
 
-Project Link: [https://github.com/yourusername/skillsync](https://github.com/yourusername/skillsync)
+For support, email support@skillsync.com or create an issue in this repository.
+
+## 🔄 Updates
+
+Stay updated with the latest features and improvements by following this repository.
+
+---
+
+**Made with ❤️ by [Your Name]**

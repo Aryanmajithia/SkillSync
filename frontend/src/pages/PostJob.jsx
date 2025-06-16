@@ -1,285 +1,336 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
+import { jobService } from "../services/jobService";
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import { toast } from "sonner";
+import { useAuth } from "../hooks/useAuth";
 
 export default function PostJob() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     title: "",
-    description: "",
-    category: "",
-    type: "",
-    experience: "",
-    salary: "",
-    salaryType: "hourly",
+    company: "",
     location: "",
-    skills: [],
-    requirements: [""],
-    attachments: [],
+    type: "full-time",
+    experience: "entry",
+    salary: {
+      min: "",
+      max: "",
+    },
+    description: "",
+    requirements: "",
+    skills: "",
   });
 
   const postJobMutation = useMutation({
-    mutationFn: async (data) => {
-      const response = await axios.post("/api/jobs", data);
-      return response.data;
+    mutationFn: (data) => {
+      console.log("Calling jobService.createJob with data:", data);
+      return jobService.createJob(data);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Job posted successfully:", data);
+      toast.success("Job posted successfully!");
       navigate("/jobs");
+    },
+    onError: (error) => {
+      console.error("Job posting error:", error);
+      console.error("Error response:", error.response);
+      console.error("Error message:", error.message);
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to post job. Please try again."
+      );
     },
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name.startsWith("salary.")) {
+      const field = name.split(".")[1];
+      setFormData((prev) => ({
+        ...prev,
+        salary: {
+          ...prev.salary,
+          [field]: value,
+        },
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+  };
+
+  const handleTypeChange = (value) => {
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      type: value,
     }));
   };
 
-  const handleRequirementChange = (index, value) => {
-    setFormData((prev) => {
-      const requirements = [...prev.requirements];
-      requirements[index] = value;
-      return { ...prev, requirements };
-    });
-  };
-
-  const addRequirement = () => {
+  const handleExperienceChange = (value) => {
     setFormData((prev) => ({
       ...prev,
-      requirements: [...prev.requirements, ""],
+      experience: value,
     }));
-  };
-
-  const removeRequirement = (index) => {
-    setFormData((prev) => {
-      const requirements = prev.requirements.filter((_, i) => i !== index);
-      return { ...prev, requirements };
-    });
-  };
-
-  const handleSkillsChange = (e) => {
-    const skills = e.target.value.split(",").map((skill) => skill.trim());
-    setFormData((prev) => ({ ...prev, skills }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    postJobMutation.mutate(formData);
+
+    // Validate required fields
+    if (
+      !formData.title ||
+      !formData.company ||
+      !formData.location ||
+      !formData.description
+    ) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    // Prepare data for submission
+    const jobData = {
+      ...formData,
+      requirements: formData.requirements
+        .split("\n")
+        .filter((line) => line.trim()),
+      skills: formData.skills
+        .split(",")
+        .map((skill) => skill.trim())
+        .filter(Boolean),
+      salary: {
+        min: parseInt(formData.salary.min) || 0,
+        max: parseInt(formData.salary.max) || 0,
+      },
+    };
+
+    console.log("Submitting job data:", jobData);
+    postJobMutation.mutate(jobData);
   };
 
+  // Redirect if user is not an employer
+  if (user?.role !== "employer") {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Access Denied
+          </h2>
+          <p className="text-gray-600">Only employers can post jobs</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-8 p-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Post a New Job</h1>
+        <Button onClick={() => navigate("/jobs")} variant="outline">
+          Back to Jobs
+        </Button>
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-sm">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Basic Information */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Job Title
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  rows="6"
-                  value={formData.description}
-                  onChange={handleChange}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                ></textarea>
-              </div>
-            </div>
-          </div>
-
-          {/* Job Details */}
+          {/* Basic Job Information */}
           <div>
             <h2 className="text-xl font-semibold mb-4">Job Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Category
-                </label>
-                <select
-                  name="category"
-                  value={formData.category}
+                <Label htmlFor="title">Job Title *</Label>
+                <Input
+                  id="title"
+                  type="text"
+                  name="title"
+                  value={formData.title}
                   onChange={handleChange}
+                  className="mt-1"
+                  placeholder="e.g., Senior React Developer"
                   required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                >
-                  <option value="">Select a category</option>
-                  <option value="web-development">Web Development</option>
-                  <option value="mobile-development">Mobile Development</option>
-                  <option value="data-science">Data Science</option>
-                  <option value="design">Design</option>
-                </select>
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Job Type
-                </label>
-                <select
-                  name="type"
-                  value={formData.type}
+                <Label htmlFor="company">Company *</Label>
+                <Input
+                  id="company"
+                  type="text"
+                  name="company"
+                  value={formData.company}
                   onChange={handleChange}
+                  className="mt-1"
+                  placeholder="Your company name"
                   required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                >
-                  <option value="">Select job type</option>
-                  <option value="full-time">Full Time</option>
-                  <option value="part-time">Part Time</option>
-                  <option value="contract">Contract</option>
-                  <option value="freelance">Freelance</option>
-                </select>
+                />
               </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Experience Level
-                </label>
-                <select
-                  name="experience"
-                  value={formData.experience}
-                  onChange={handleChange}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                >
-                  <option value="">Select experience level</option>
-                  <option value="entry">Entry Level</option>
-                  <option value="intermediate">Intermediate</option>
-                  <option value="expert">Expert</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Location
-                </label>
-                <input
+                <Label htmlFor="location">Location *</Label>
+                <Input
+                  id="location"
                   type="text"
                   name="location"
                   value={formData.location}
                   onChange={handleChange}
+                  className="mt-1"
+                  placeholder="e.g., New York, NY or Remote"
                   required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 />
+              </div>
+              <div>
+                <Label htmlFor="type">Job Type</Label>
+                <Select value={formData.type} onValueChange={handleTypeChange}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select job type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="full-time">Full Time</SelectItem>
+                    <SelectItem value="part-time">Part Time</SelectItem>
+                    <SelectItem value="contract">Contract</SelectItem>
+                    <SelectItem value="freelance">Freelance</SelectItem>
+                    <SelectItem value="internship">Internship</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
 
-          {/* Salary Information */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Salary Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Salary
-                </label>
-                <input
-                  type="number"
-                  name="salary"
-                  value={formData.salary}
-                  onChange={handleChange}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Salary Type
-                </label>
-                <select
-                  name="salaryType"
-                  value={formData.salaryType}
-                  onChange={handleChange}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                >
-                  <option value="hourly">Hourly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="yearly">Yearly</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Skills and Requirements */}
+          {/* Experience and Salary */}
           <div>
             <h2 className="text-xl font-semibold mb-4">
-              Skills and Requirements
+              Experience & Compensation
             </h2>
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Required Skills
-                </label>
-                <input
-                  type="text"
-                  value={formData.skills.join(", ")}
-                  onChange={handleSkillsChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  placeholder="Enter skills separated by commas"
+                <Label htmlFor="experience">Experience Level</Label>
+                <Select
+                  value={formData.experience}
+                  onValueChange={handleExperienceChange}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select experience level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="entry">Entry Level</SelectItem>
+                    <SelectItem value="mid">Mid Level</SelectItem>
+                    <SelectItem value="senior">Senior Level</SelectItem>
+                    <SelectItem value="lead">Lead</SelectItem>
+                    <SelectItem value="executive">Executive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="salaryMin">Min Salary ($)</Label>
+                <Input
+                  id="salaryMin"
+                  type="number"
+                  name="salary.min"
+                  value={formData.salary.min}
+                  onChange={handleChange}
+                  className="mt-1"
+                  placeholder="50000"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Requirements
-                </label>
-                {formData.requirements.map((req, index) => (
-                  <div key={index} className="flex gap-2 mt-2">
-                    <input
-                      type="text"
-                      value={req}
-                      onChange={(e) =>
-                        handleRequirementChange(index, e.target.value)
-                      }
-                      className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      placeholder={`Requirement ${index + 1}`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeRequirement(index)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addRequirement}
-                  className="mt-2 text-blue-600 hover:text-blue-700"
-                >
-                  Add Requirement
-                </button>
+                <Label htmlFor="salaryMax">Max Salary ($)</Label>
+                <Input
+                  id="salaryMax"
+                  type="number"
+                  name="salary.max"
+                  value={formData.salary.max}
+                  onChange={handleChange}
+                  className="mt-1"
+                  placeholder="80000"
+                />
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
-              disabled={postJobMutation.isLoading}
+          {/* Job Description */}
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Job Description</h2>
+            <div>
+              <Label htmlFor="description">Description *</Label>
+              <Textarea
+                id="description"
+                name="description"
+                rows="6"
+                value={formData.description}
+                onChange={handleChange}
+                className="mt-1"
+                placeholder="Describe the role, responsibilities, and what makes this position exciting..."
+                required
+              />
+            </div>
+          </div>
+
+          {/* Requirements */}
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Requirements</h2>
+            <div>
+              <Label htmlFor="requirements">Requirements</Label>
+              <Textarea
+                id="requirements"
+                name="requirements"
+                rows="4"
+                value={formData.requirements}
+                onChange={handleChange}
+                className="mt-1"
+                placeholder="Enter requirements, one per line..."
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Enter each requirement on a new line
+              </p>
+            </div>
+          </div>
+
+          {/* Skills */}
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Required Skills</h2>
+            <div>
+              <Label htmlFor="skills">Skills</Label>
+              <Input
+                id="skills"
+                type="text"
+                name="skills"
+                value={formData.skills}
+                onChange={handleChange}
+                className="mt-1"
+                placeholder="React, Node.js, MongoDB, TypeScript"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Enter skills separated by commas
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/jobs")}
             >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={postJobMutation.isLoading}>
               {postJobMutation.isLoading ? "Posting..." : "Post Job"}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

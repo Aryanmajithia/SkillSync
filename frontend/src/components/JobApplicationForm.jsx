@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { applicationService } from "../services/applicationService";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { Label } from "./ui/label";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 import { Upload, X } from "lucide-react";
 
 const JobApplicationForm = ({ jobId }) => {
@@ -22,25 +22,21 @@ const JobApplicationForm = ({ jobId }) => {
 
   const applyForJob = useMutation({
     mutationFn: async (data) => {
-      const formData = new FormData();
+      const formDataToSend = new FormData();
       Object.keys(data).forEach((key) => {
         if (data[key] !== null) {
-          formData.append(key, data[key]);
+          formDataToSend.append(key, data[key]);
         }
       });
-      formData.append("jobId", jobId);
+      formDataToSend.append("jobId", jobId);
 
-      const response = await axios.post("/api/applications", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      return response.data;
+      return await applicationService.applyForJob(formDataToSend);
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["applications"]);
+      queryClient.invalidateQueries(["myApplications"]);
       toast.success("Application submitted successfully!");
-      navigate("/applications");
+      navigate("/dashboard");
     },
     onError: (error) => {
       toast.error(
@@ -74,13 +70,29 @@ const JobApplicationForm = ({ jobId }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (!formData.coverLetter.trim()) {
+      toast.error("Please provide a cover letter");
+      return;
+    }
+
+    if (!formData.availability.trim()) {
+      toast.error("Please provide your availability");
+      return;
+    }
+
+    if (!formData.expectedSalary) {
+      toast.error("Please provide your expected salary");
+      return;
+    }
+
     applyForJob.mutate(formData);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <Label htmlFor="coverLetter">Cover Letter</Label>
+        <Label htmlFor="coverLetter">Cover Letter *</Label>
         <Textarea
           id="coverLetter"
           name="coverLetter"
@@ -146,7 +158,7 @@ const JobApplicationForm = ({ jobId }) => {
       </div>
 
       <div>
-        <Label htmlFor="availability">Availability</Label>
+        <Label htmlFor="availability">Availability *</Label>
         <Input
           id="availability"
           name="availability"
@@ -159,7 +171,7 @@ const JobApplicationForm = ({ jobId }) => {
       </div>
 
       <div>
-        <Label htmlFor="expectedSalary">Expected Salary</Label>
+        <Label htmlFor="expectedSalary">Expected Salary *</Label>
         <Input
           id="expectedSalary"
           name="expectedSalary"

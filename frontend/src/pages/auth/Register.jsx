@@ -1,6 +1,17 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "../../hooks/useAuth";
+import { Input } from "../../components/ui/input";
+import { Button } from "../../components/ui/button";
+import { Label } from "../../components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import { toast } from "sonner";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -8,9 +19,9 @@ export default function Register() {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "freelancer",
+    role: "job_seeker",
   });
-  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
 
@@ -22,24 +33,45 @@ export default function Register() {
     }));
   };
 
+  const handleRoleChange = (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      role: value,
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setIsLoading(true);
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
+      toast.error("Passwords do not match");
+      setIsLoading(false);
       return;
     }
 
-    const result = await register({
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-      role: formData.role,
-    });
+    if (formData.password.length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      setIsLoading(false);
+      return;
+    }
 
-    if (!result.success) {
-      setError(result.error);
+    try {
+      await register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+      });
+      toast.success("Registration successful!");
+      navigate("/dashboard");
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          "Registration failed. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -61,97 +93,77 @@ export default function Register() {
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
-          <div className="rounded-md shadow-sm -space-y-px">
+          <div className="space-y-4">
             <div>
-              <label htmlFor="name" className="sr-only">
-                Full Name
-              </label>
-              <input
+              <Label htmlFor="name">Full Name</Label>
+              <Input
                 id="name"
                 name="name"
                 type="text"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Full Name"
+                placeholder="Enter your full name"
                 value={formData.name}
                 onChange={handleChange}
+                className="mt-1"
               />
             </div>
             <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
-              </label>
-              <input
+              <Label htmlFor="email">Email address</Label>
+              <Input
                 id="email"
                 name="email"
                 type="email"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
+                placeholder="Enter your email"
                 value={formData.email}
                 onChange={handleChange}
+                className="mt-1"
               />
             </div>
             <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
+              <Label htmlFor="password">Password</Label>
+              <Input
                 id="password"
                 name="password"
                 type="password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
+                placeholder="Enter your password"
                 value={formData.password}
                 onChange={handleChange}
+                className="mt-1"
               />
             </div>
             <div>
-              <label htmlFor="confirmPassword" className="sr-only">
-                Confirm Password
-              </label>
-              <input
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
                 id="confirmPassword"
                 name="confirmPassword"
                 type="password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Confirm Password"
+                placeholder="Confirm your password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
+                className="mt-1"
               />
             </div>
             <div>
-              <label htmlFor="role" className="sr-only">
-                Role
-              </label>
-              <select
-                id="role"
-                name="role"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                value={formData.role}
-                onChange={handleChange}
-              >
-                <option value="freelancer">Freelancer</option>
-                <option value="client">Client</option>
-              </select>
+              <Label htmlFor="role">I am a</Label>
+              <Select value={formData.role} onValueChange={handleRoleChange}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select your role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="job_seeker">Job Seeker</SelectItem>
+                  <SelectItem value="employer">Employer</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
           <div>
-            <button
-              type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Create Account
-            </button>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Creating Account..." : "Create Account"}
+            </Button>
           </div>
         </form>
       </div>
