@@ -2,7 +2,7 @@
   "name": "skillsync",
   "version": "1.0.0",
   "description": "AI-powered job search and interview platform",
-  "main": "index.js",
+  "main": "server/index.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:frontend\"",
     "dev:server": "cd server && npm run dev",
@@ -10,7 +10,8 @@
     "build": "cd frontend && npm run build",
     "build:server": "cd server && npm install",
     "start": "cd server && npm start",
-    "install:all": "npm install && cd server && npm install && cd ../frontend && npm install"
+    "install:all": "npm install && cd server && npm install && cd ../frontend && npm install",
+    "postinstall": "cd server && npm install"
   },
   "keywords": [
     "job-search",
@@ -30,5 +31,8 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
