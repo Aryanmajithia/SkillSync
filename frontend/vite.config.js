@@ -14,18 +14,9 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": {
-        target: "http://localhost:5000",
+        target: "http://localhost:5173",
         changeOrigin: true,
       },
-    },
-  },
-  css: {
-    postcss: {
-      plugins: [
-        require("postcss-import"),
-        require("@tailwindcss/postcss7-compat"),
-        require("autoprefixer"),
-      ],
     },
   },
   esbuild: {
