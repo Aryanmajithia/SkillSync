@@ -2,6 +2,12 @@
 
 A comprehensive job search and interview platform powered by AI, featuring resume analysis, AI interviews, job matching, and premium subscription features.
 
+## 🌐 Live Demo
+
+- **Frontend (Vercel):** [https://skillsync-cbstxyrmx-aryanmajithia18.vercel.app](https://skillsync-cbstxyrmx-aryanmajithia18.vercel.app)
+- **Backend API (Render):** [https://skillsync-backend-opqm.onrender.com](https://skillsync-backend-opqm.onrender.com)
+- **API Health Check:** [https://skillsync-backend-opqm.onrender.com/health](https://skillsync-backend-opqm.onrender.com/health)
+
 ## 🚀 Features
 
 - **AI-Powered Resume Analysis** - Get detailed feedback and ATS optimization
@@ -91,6 +97,17 @@ A comprehensive job search and interview platform powered by AI, featuring resum
 
 ## 🚀 Deployment
 
+### ✅ Already Deployed
+
+This project is currently deployed and live:
+
+- **Frontend:** [https://skillsync-cbstxyrmx-aryanmajithia18.vercel.app](https://skillsync-cbstxyrmx-aryanmajithia18.vercel.app) (Vercel)
+- **Backend:** [https://skillsync-backend-opqm.onrender.com](https://skillsync-backend-opqm.onrender.com) (Render)
+
+### Deployment Instructions (For Reference)
+
+If you want to deploy your own instance:
+
 ### 1. GitHub Setup
 
 1. **Initialize Git and push to GitHub**
@@ -126,8 +143,8 @@ A comprehensive job search and interview platform powered by AI, featuring resum
    - `STRIPE_SECRET_KEY`: Your Stripe secret key
    - `STRIPE_PUBLISHABLE_KEY`: Your Stripe publishable key
    - `STRIPE_WEBHOOK_SECRET`: Your Stripe webhook secret
-   - `CORS_ORIGIN`: Your frontend URL (will be set after Vercel deployment)
-   - `FRONTEND_URL`: Your frontend URL
+   - `CORS_ORIGIN`: `https://skillsync-cbstxyrmx-aryanmajithia18.vercel.app`
+   - `FRONTEND_URL`: `https://skillsync-cbstxyrmx-aryanmajithia18.vercel.app`
 
 6. **Deploy and note the URL** (e.g., `https://skillsync-backend.onrender.com`)
 
@@ -144,7 +161,7 @@ A comprehensive job search and interview platform powered by AI, featuring resum
 
 4. **Add Environment Variables:**
 
-   - `VITE_API_URL`: Your Render backend URL
+   - `VITE_API_URL`: `https://skillsync-backend-opqm.onrender.com`
    - `VITE_STRIPE_PUBLISHABLE_KEY`: Your Stripe publishable key
 
 5. **Deploy**
@@ -156,8 +173,8 @@ After both deployments are complete:
 1. **Go back to Render dashboard**
 2. **Update the environment variables:**
 
-   - `CORS_ORIGIN`: Your Vercel frontend URL
-   - `FRONTEND_URL`: Your Vercel frontend URL
+   - `CORS_ORIGIN`: `https://skillsync-cbstxyrmx-aryanmajithia18.vercel.app`
+   - `FRONTEND_URL`: `https://skillsync-cbstxyrmx-aryanmajithia18.vercel.app`
 
 3. **Redeploy the backend service**
 
@@ -240,4 +257,4 @@ Stay updated with the latest features and improvements by following this reposit
 
 ---
 
-**Made with ❤️ by [Your Name]**
+**Made with ❤️ by Aryan Majithia**
