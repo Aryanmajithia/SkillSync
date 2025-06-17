@@ -3,7 +3,7 @@ services:
     name: skillsync-backend
     env: node
     plan: free
-    buildCommand: cd server && npm install && npm run build
+    buildCommand: cd server && npm install
     startCommand: cd server && npm start
     envVars:
       - key: NODE_ENV
@@ -23,6 +23,16 @@ services:
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
       - key: CORS_ORIGIN
-        value: https://your-frontend-domain.vercel.app
+        value: https://skillsync-frontend.onrender.com
       - key: FRONTEND_URL
-        value: https://your-frontend-domain.vercel.app
+        value: https://skillsync-frontend.onrender.com
+
+  - type: web
+    name: skillsync-frontend
+    env: static
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://skillsync-backend.onrender.com
