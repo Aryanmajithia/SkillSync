@@ -25,6 +25,30 @@ app.get("/health", (req, res) => {
   });
 });
 
+// Root endpoint
+app.get("/", (req, res) => {
+  res.json({
+    message: "SkillSync Backend API",
+    status: "running",
+    endpoints: {
+      health: "/health",
+      auth: "/api/auth",
+      jobs: "/api/jobs",
+      applications: "/api/applications",
+      profile: "/api/profile",
+      ai: "/api/ai",
+      interviews: "/api/interviews",
+      resumeAnalysis: "/api/resume-analysis",
+      notifications: "/api/notifications",
+      dashboard: "/api/dashboard",
+      messages: "/api/messages",
+      settings: "/api/settings",
+      payments: "/api/payments",
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Database connection
 mongoose
   .connect(process.env.MONGODB_URI || "mongodb://localhost:27017/skillsync", {
