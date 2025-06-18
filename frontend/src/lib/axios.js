@@ -3,7 +3,9 @@ import axios from "axios";
 const api = axios.create({
   baseURL:
     import.meta.env.VITE_API_URL ||
-    "https://skillsync-backend-opqm.onrender.com",
+    (import.meta.env.DEV
+      ? "http://localhost:5000"
+      : "https://skillsync-backend-opqm.onrender.com"),
   headers: {
     "Content-Type": "application/json",
   },
