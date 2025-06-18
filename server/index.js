@@ -10,7 +10,16 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin:
+      process.env.CORS_ORIGIN ||
+      "https://skillsync-cbstxyrmx-aryanmajithia18.vercel.app",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -54,9 +63,20 @@ mongoose
   .connect(process.env.MONGODB_URI || "mongodb://localhost:27017/skillsync", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
   })
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+  .then(() => {
+    console.log("Connected to MongoDB");
+    console.log(
+      "MongoDB URI:",
+      process.env.MONGODB_URI ? "Set" : "Using default"
+    );
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+    console.error("Please check your MONGODB_URI environment variable");
+  });
 
 // API Routes
 app.use("/api/auth", require("./routes/auth"));
