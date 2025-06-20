@@ -70,7 +70,11 @@ if (process.env.NODE_ENV === "development") {
 // CORS configuration (allow all origins for local development)
 app.use(
   cors({
-    origin: "*", // WARNING: For development only. Revert to specific origins for production.
+    origin: [
+      "https://skillsync-nu.vercel.app",
+      "http://localhost:5173",
+      process.env.FRONTEND_URL,
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
