@@ -10,8 +10,24 @@ export const jobService = {
       }
     });
 
-    const response = await api.get(`/api/jobs?${params.toString()}`);
-    return response.data;
+    // Fetch real jobs
+    const realJobsResponse = await api.get(`/api/jobs?${params.toString()}`);
+    let realJobs = realJobsResponse.data;
+    // If the response is paginated, extract jobs array
+    if (realJobs && realJobs.jobs) realJobs = realJobs.jobs;
+    // Fetch mock jobs
+    let mockJobs = [];
+    try {
+      const mockJobsResponse = await api.get("/api/ai/jobs-mock");
+      mockJobs = mockJobsResponse.data;
+    } catch (e) {
+      mockJobs = [];
+    }
+    // Merge and return all jobs
+    return [
+      ...(Array.isArray(realJobs) ? realJobs : []),
+      ...(Array.isArray(mockJobs) ? mockJobs : []),
+    ];
   },
 
   // Get single job by ID
@@ -52,6 +68,12 @@ export const jobService = {
     return response.data;
   },
 
+  // Get jobs posted by current employer
+  getMyPostedJobs: async () => {
+    const response = await api.get("/api/jobs/my-jobs");
+    return response.data;
+  },
+
   // Fetch external jobs from public APIs
   searchExternalJobs: async (params = {}) => {
     try {
@@ -75,4 +97,47 @@ export const jobService = {
       throw error;
     }
   },
+};
+
+export const createJobTemplate = (templateName, jobData) =>
+  api.post("/api/jobs/templates", { templateName, jobData });
+
+export const getJobTemplates = () => api.get("/api/jobs/templates");
+
+export const updateJobTemplate = (id, templateName, jobData) =>
+  api.put(`/api/jobs/templates/${id}`, { templateName, jobData });
+
+export const deleteJobTemplate = (id) =>
+  api.delete(`/api/jobs/templates/${id}`);
+
+export const bulkImportJobs = (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  return api.post("/api/jobs/bulk-import", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
+export const scheduleJob = (id, scheduledAt) =>
+  api.put(`/api/jobs/${id}/schedule`, { scheduledAt });
+
+// Analytics functions
+export const getEmployerOverview = async () => {
+  const response = await api.get("/api/analytics/employer-overview");
+  return response.data;
+};
+
+export const getJobPerformance = async () => {
+  const response = await api.get("/api/analytics/job-performance");
+  return response.data;
+};
+
+export const getApplicationFunnel = async () => {
+  const response = await api.get("/api/analytics/application-funnel");
+  return response.data;
+};
+
+export const getMarketTrends = async () => {
+  const response = await api.get("/api/analytics/market-trends");
+  return response.data;
 };

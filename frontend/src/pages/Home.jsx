@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   motion,
   useScroll,
@@ -34,16 +34,25 @@ import {
   Play,
   Quote,
   User,
+  Crown,
+  Brain,
+  Mic,
+  BarChart3,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useAuth } from "../hooks/useAuth";
+import AIAssistant from "../components/GeminiChatbot";
 
 export default function Home() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
   const springY = useSpring(y, { stiffness: 100, damping: 30 });
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
 
   // Auto-rotate testimonials
   useEffect(() => {
@@ -52,6 +61,42 @@ export default function Home() {
     }, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleSearch = () => {
+    if (search.trim()) {
+      navigate(`/jobs?search=${encodeURIComponent(search.trim())}`);
+    }
+  };
+
+  const handlePopularSearch = (tag) => {
+    navigate(`/jobs?category=${encodeURIComponent(tag)}`);
+  };
+
+  const handleFeatureClick = (feature) => {
+    const featureKey = feature.toLowerCase().replace(/\s+/g, "-");
+    switch (featureKey) {
+      case "ai-powered-matching":
+        navigate("/career-insights");
+        break;
+      case "interview-preparation":
+        navigate("/gemini-interview");
+        break;
+      case "resume-optimization":
+        navigate("/dashboard");
+        break;
+      case "career-analytics":
+        navigate("/dashboard");
+        break;
+      case "smart-communication":
+        navigate("/messages");
+        break;
+      case "community-support":
+        navigate("/help");
+        break;
+      default:
+        navigate("/jobs");
+    }
+  };
 
   const fadeInUp = {
     initial: { opacity: 0, y: 60 },
@@ -246,22 +291,14 @@ export default function Home() {
                   onChange={(e) => setSearch(e.target.value)}
                   onKeyPress={(e) => {
                     if (e.key === "Enter" && search.trim()) {
-                      window.location.href = `/jobs?search=${encodeURIComponent(
-                        search.trim()
-                      )}`;
+                      handleSearch();
                     }
                   }}
                   placeholder="Search for jobs, skills, or companies..."
                   className="w-full pl-12 pr-4 py-4 text-lg border-2 border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none transition-all duration-300"
                 />
                 <button
-                  onClick={() => {
-                    if (search.trim()) {
-                      window.location.href = `/jobs?search=${encodeURIComponent(
-                        search.trim()
-                      )}`;
-                    }
-                  }}
+                  onClick={handleSearch}
                   className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors duration-300"
                 >
                   Search
@@ -287,12 +324,7 @@ export default function Home() {
               ].map((tag, index) => (
                 <button
                   key={index}
-                  onClick={() => {
-                    // Job category filter functionality
-                    window.location.href = `/jobs?category=${encodeURIComponent(
-                      tag
-                    )}`;
-                  }}
+                  onClick={() => handlePopularSearch(tag)}
                   className="px-4 py-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300 cursor-pointer"
                 >
                   {tag}
@@ -314,13 +346,23 @@ export default function Home() {
                 <Briefcase className="w-5 h-5" />
                 Browse Jobs
               </Link>
-              <Link
-                to="/register"
-                className="bg-transparent border-2 border-blue-600 text-blue-600 dark:border-white dark:text-white hover:bg-blue-600 hover:text-white dark:hover:bg-white dark:hover:text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-300 flex items-center gap-2"
-              >
-                <User className="w-5 h-5" />
-                Get Started
-              </Link>
+              {user ? (
+                <Link
+                  to="/dashboard"
+                  className="bg-transparent border-2 border-blue-600 text-blue-600 dark:border-white dark:text-white hover:bg-blue-600 hover:text-white dark:hover:bg-white dark:hover:text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-300 flex items-center gap-2"
+                >
+                  <Crown className="w-5 h-5" />
+                  Go to Dashboard
+                </Link>
+              ) : (
+                <Link
+                  to="/register"
+                  className="bg-transparent border-2 border-blue-600 text-blue-600 dark:border-white dark:text-white hover:bg-blue-600 hover:text-white dark:hover:bg-white dark:hover:text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-300 flex items-center gap-2"
+                >
+                  <User className="w-5 h-5" />
+                  Get Started
+                </Link>
+              )}
             </motion.div>
           </div>
         </div>
@@ -397,19 +439,7 @@ export default function Home() {
                 transition={{ duration: 0.8, delay: index * 0.1 }}
                 viewport={{ once: true }}
                 whileHover={{ y: -10, scale: 1.02 }}
-                onClick={() => {
-                  // Navigate to relevant sections based on feature
-                  const routes = {
-                    "AI-Powered Matching": "/dashboard",
-                    "Interview Preparation": "/dashboard",
-                    "Resume Optimization": "/dashboard",
-                    "Career Analytics": "/dashboard",
-                    "Smart Communication": "/dashboard",
-                    "Community Support": "/dashboard",
-                  };
-                  const route = routes[feature.title] || "/dashboard";
-                  window.location.href = route;
-                }}
+                onClick={() => handleFeatureClick(feature.title)}
                 className="bg-white dark:bg-gray-700 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-600 cursor-pointer"
               >
                 <div
@@ -703,6 +733,42 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
+      {/* AI Assistant Floating Button */}
+      <button
+        className="fixed bottom-8 right-8 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-4 focus:outline-none"
+        onClick={() => setShowAIAssistant(true)}
+        aria-label="Open AI Assistant"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-7 w-7"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8s-9-3.582-9-8 4.03-8 9-8 9 3.582 9 8z"
+          />
+        </svg>
+      </button>
+      {showAIAssistant && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-4 max-w-lg w-full relative">
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+              onClick={() => setShowAIAssistant(false)}
+              aria-label="Close AI Assistant"
+            >
+              ✕
+            </button>
+            <AIAssistant />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

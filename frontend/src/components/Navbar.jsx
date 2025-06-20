@@ -121,6 +121,19 @@ const Navbar = () => {
                         Dashboard
                       </Link>
                       <Link
+                        to="/career-insights"
+                        className="flex items-center px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <Crown className="w-4 h-4 mr-3 text-purple-500" />
+                        <span className="flex items-center">
+                          Career Insights
+                          <span className="ml-1 text-xs bg-purple-100 text-purple-800 px-1 py-0.5 rounded">
+                            AI
+                          </span>
+                        </span>
+                      </Link>
+                      <Link
                         to="/profile"
                         className="flex items-center px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                         onClick={() => setIsUserMenuOpen(false)}

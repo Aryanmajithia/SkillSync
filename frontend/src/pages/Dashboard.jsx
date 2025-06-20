@@ -2,15 +2,16 @@ import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { usePremium } from "../hooks/usePremium";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { applicationService } from "../services/applicationService";
 import { jobService } from "../services/jobService";
 import ApplicationTracker from "../components/ApplicationTracker";
 import JobRecommendations from "../components/JobRecommendations";
 import ResumeAnalyzer from "../components/ResumeAnalyzer";
 import AIJobMatcher from "../components/AIJobMatcher";
-import PremiumAIInterview from "../components/PremiumAIInterview";
+import PremiumInterviewAI from "../components/PremiumInterviewAI";
 import PremiumFeatureGuard from "../components/PremiumFeatureGuard";
+import MyPostedJobs from "../components/MyPostedJobs";
 import {
   Briefcase,
   Bell,
@@ -31,10 +32,24 @@ import {
   Brain,
   TrendingUp,
   Crown,
+  FileText,
+  Calendar,
+  MapPin,
+  DollarSign,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import ChatSystem from "../components/ChatSystem";
+import {
+  getEmployerOverview,
+  getJobPerformance,
+  getApplicationFunnel,
+  getMarketTrends,
+} from "../services/jobService";
+import CandidateRanking from "../components/CandidateRanking";
+import { Card } from "../components/ui/card";
+import GeminiChatbot from "../components/GeminiChatbot";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -49,11 +64,22 @@ const Dashboard = () => {
   const [userAnswers, setUserAnswers] = useState([]);
   const [timer, setTimer] = useState(0);
   const [showResults, setShowResults] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [analytics, setAnalytics] = useState({
+    overview: {},
+    jobs: [],
+    funnel: {},
+    market: {},
+  });
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showGeminiChat, setShowGeminiChat] = useState(false);
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const timerRef = useRef(null);
   const audioRef = useRef(null);
+
+  const navigate = useNavigate();
 
   // Interview questions
   const interviewQuestions = [
@@ -97,6 +123,13 @@ const Dashboard = () => {
     queryKey: ["jobRecommendations", user?.id],
     queryFn: () => jobService.getRecommendations(user?.id),
     enabled: !!user?.id,
+  });
+
+  // Fetch recent jobs for employers
+  const { data: recentJobs = [] } = useQuery({
+    queryKey: ["recentJobs"],
+    queryFn: () => jobService.getJobs({ limit: 10 }),
+    enabled: !!user?.role === "employer",
   });
 
   const handleResumeAnalysis = (analysisData) => {
@@ -310,6 +343,21 @@ const Dashboard = () => {
   }, []);
 
   const currentQuestion = interviewQuestions[currentQuestionIndex];
+
+  const loadAnalytics = async () => {
+    const [overview, jobs, funnel, market] = await Promise.all([
+      getEmployerOverview(),
+      getJobPerformance(),
+      getApplicationFunnel(),
+      getMarketTrends(),
+    ]);
+    setAnalytics({
+      overview: overview.data,
+      jobs: jobs.data,
+      funnel: funnel.data,
+      market: market.data,
+    });
+  };
 
   if (applicationsLoading) {
     return (
@@ -527,8 +575,58 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Job Recommendations */}
-        <JobRecommendations />
+        {/* AI Job Recommendations for Candidates */}
+        {user?.role === "candidate" && (
+          <div className="mt-8">
+            <JobRecommendations />
+          </div>
+        )}
+
+        {/* AI Candidate Ranking for Employers */}
+        {user?.role === "employer" && (
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold mb-4">AI Candidate Ranking</h2>
+            <p className="text-gray-600 mb-4">
+              View AI-powered candidate rankings for your job postings
+            </p>
+            <div className="grid gap-4">
+              {recentJobs.slice(0, 3).map((job) => (
+                <Card key={job._id} className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold">{job.title}</h3>
+                      <p className="text-sm text-gray-600">{job.company}</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate(`/jobs/${job._id}/candidates`)}
+                    >
+                      View Candidates
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* My Posted Jobs */}
+        {user?.role === "employer" && <MyPostedJobs />}
+
+        {/* Analytics Button */}
+        <div className="mt-8">
+          <Button
+            variant="outline"
+            className="w-full justify-start"
+            onClick={() => {
+              setShowAnalytics(true);
+              loadAnalytics();
+            }}
+          >
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Analytics Dashboard
+          </Button>
+        </div>
       </div>
 
       {/* Premium AI Interview Modal */}
@@ -548,7 +646,7 @@ const Dashboard = () => {
               className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <PremiumAIInterview />
+              <PremiumInterviewAI />
             </motion.div>
           </motion.div>
         )}
@@ -819,6 +917,212 @@ const Dashboard = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Chat System Modal */}
+      {showChat && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-4xl h-[80vh] relative">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold">Messages</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowChat(false)}
+              >
+                ✕
+              </Button>
+            </div>
+            <div className="h-[calc(100%-80px)]">
+              <ChatSystem />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Analytics Modal */}
+      {showAnalytics && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-5xl h-[90vh] relative overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold">Analytics Dashboard</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAnalytics(false)}
+              >
+                ✕
+              </Button>
+            </div>
+            <div className="p-6 space-y-8">
+              {/* Overview */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="bg-blue-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold">
+                    {analytics.overview.totalJobs}
+                  </div>
+                  <div className="text-gray-600">Total Jobs</div>
+                </div>
+                <div className="bg-green-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold">
+                    {analytics.overview.totalApplications}
+                  </div>
+                  <div className="text-gray-600">Applications</div>
+                </div>
+                <div className="bg-yellow-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold">
+                    {analytics.overview.totalHires}
+                  </div>
+                  <div className="text-gray-600">Hires</div>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold">
+                    {analytics.overview.totalActive}
+                  </div>
+                  <div className="text-gray-600">Active Jobs</div>
+                </div>
+              </div>
+              {/* Job Performance */}
+              <div>
+                <h3 className="font-semibold mb-2">Job Performance</h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead>
+                      <tr>
+                        <th className="px-2 py-1 text-left">Title</th>
+                        <th className="px-2 py-1 text-left">Status</th>
+                        <th className="px-2 py-1 text-left">Applications</th>
+                        <th className="px-2 py-1 text-left">Hires</th>
+                        <th className="px-2 py-1 text-left">
+                          Time to Fill (days)
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {analytics.jobs.map((job) => (
+                        <tr key={job.jobId}>
+                          <td className="px-2 py-1">{job.title}</td>
+                          <td className="px-2 py-1">{job.status}</td>
+                          <td className="px-2 py-1">{job.applications}</td>
+                          <td className="px-2 py-1">{job.hires}</td>
+                          <td className="px-2 py-1">
+                            {job.timeToFill ? job.timeToFill.toFixed(1) : "-"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              {/* Application Funnel */}
+              <div>
+                <h3 className="font-semibold mb-2">Application Funnel</h3>
+                <div className="flex space-x-4">
+                  {Object.entries(analytics.funnel).map(([status, count]) => (
+                    <div
+                      key={status}
+                      className="bg-gray-100 rounded-lg px-4 py-2 text-center"
+                    >
+                      <div className="text-lg font-bold">{count}</div>
+                      <div className="text-gray-600 capitalize">{status}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Market Trends */}
+              <div>
+                <h3 className="font-semibold mb-2">Market Trends</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-medium mb-1">Top Roles</h4>
+                    <ul>
+                      {analytics.market.topRoles?.map((role) => (
+                        <li key={role._id}>
+                          {role._id}{" "}
+                          <span className="text-gray-500">({role.count})</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-1">Top Locations</h4>
+                    <ul>
+                      {analytics.market.topLocations?.map((loc) => (
+                        <li key={loc._id}>
+                          {loc._id}{" "}
+                          <span className="text-gray-500">({loc.count})</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-1">Top Skills</h4>
+                    <ul>
+                      {analytics.market.topSkills?.map((skill) => (
+                        <li key={skill._id}>
+                          {skill._id}{" "}
+                          <span className="text-gray-500">({skill.count})</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-1">Salary Trends</h4>
+                    {analytics.market.salaryStats && (
+                      <div>
+                        <div>
+                          Avg: ${analytics.market.salaryStats.avg?.toFixed(0)}
+                        </div>
+                        <div>
+                          Min: ${analytics.market.salaryStats.min?.toFixed(0)}
+                        </div>
+                        <div>
+                          Max: ${analytics.market.salaryStats.max?.toFixed(0)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Gemini Chatbot Floating Button */}
+      <button
+        className="fixed bottom-8 right-8 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-4 focus:outline-none"
+        onClick={() => setShowGeminiChat(true)}
+        aria-label="Open Gemini Chatbot"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-7 w-7"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8s-9-3.582-9-8 4.03-8 9-8 9 3.582 9 8z"
+          />
+        </svg>
+      </button>
+      {showGeminiChat && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-4 max-w-lg w-full relative">
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+              onClick={() => setShowGeminiChat(false)}
+              aria-label="Close Gemini Chatbot"
+            >
+              ✕
+            </button>
+            <GeminiChatbot />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

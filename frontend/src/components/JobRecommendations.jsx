@@ -33,7 +33,6 @@ const JobRecommendations = () => {
       </div>
     );
   }
-
   if (error) {
     return (
       <div className="bg-white rounded-lg shadow-sm p-6">

@@ -9,7 +9,13 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["application", "message", "interview", "job", "system"],
+      enum: [
+        "application",
+        "interview",
+        "status_update",
+        "job_match",
+        "weekly_digest",
+      ],
       required: true,
     },
     title: {
@@ -29,6 +35,13 @@ const notificationSchema = new mongoose.Schema(
     },
     data: {
       type: mongoose.Schema.Types.Mixed,
+    },
+    emailSent: {
+      type: Boolean,
+      default: false,
+    },
+    emailSentAt: {
+      type: Date,
     },
   },
   {

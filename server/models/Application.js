@@ -30,7 +30,7 @@ const applicationSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["applied", "reviewed", "interview", "accepted", "rejected"],
+      enum: ["applied", "reviewing", "interviewing", "hired", "rejected"],
       default: "applied",
     },
     appliedAt: {
@@ -69,7 +69,7 @@ const applicationSchema = new mongoose.Schema(
 );
 
 // Index for efficient queries
-applicationSchema.index({ userId: 1, jobId: 1 }, { unique: true });
+// applicationSchema.index({ userId: 1, jobId: 1 }, { unique: true });
 applicationSchema.index({ userId: 1, status: 1 });
 applicationSchema.index({ jobId: 1, status: 1 });
 applicationSchema.index({ appliedAt: -1 });

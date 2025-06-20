@@ -16,6 +16,7 @@ const ApplicationTracker = () => {
     data: applications = [],
     isLoading,
     error,
+    refetch,
   } = useQuery({
     queryKey: ["myApplications"],
     queryFn: () => applicationService.getMyApplications(),
@@ -117,9 +118,14 @@ const ApplicationTracker = () => {
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">
-        Application Tracker
-      </h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-semibold text-gray-900">
+          Application Tracker
+        </h2>
+        <Button variant="outline" size="sm" onClick={refetch}>
+          Refresh
+        </Button>
+      </div>
       <div className="space-y-4">
         {applications.map((application) => (
           <div

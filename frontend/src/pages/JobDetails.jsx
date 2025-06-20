@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { jobService } from "../services/jobService";
@@ -12,16 +12,43 @@ const JobDetails = () => {
   const navigate = useNavigate();
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const { user } = useAuth();
+  const [job, setJob] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const {
-    data: job,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["job", id],
-    queryFn: () => jobService.getJob(id),
-    enabled: !!id,
-  });
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoading(true);
+    setError(null);
+    // Try to fetch real job first
+    jobService
+      .getJob(id)
+      .then((data) => {
+        if (isMounted) {
+          setJob(data);
+          setIsLoading(false);
+        }
+      })
+      .catch(async () => {
+        // If not found, try to fetch from mock jobs
+        try {
+          const mockJobs = await jobService.getJobs();
+          const found = mockJobs.find((j) => String(j.id) === String(id));
+          if (isMounted) {
+            setJob(found || null);
+            setIsLoading(false);
+          }
+        } catch (e) {
+          if (isMounted) {
+            setError(e);
+            setIsLoading(false);
+          }
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
 
   if (isLoading) {
     return (
@@ -141,7 +168,7 @@ const JobDetails = () => {
                 <p className="text-gray-600">Employers cannot apply for jobs</p>
               </div>
             ) : showApplicationForm ? (
-              <JobApplicationForm jobId={job._id} />
+              <JobApplicationForm jobId={job._id || job.id} />
             ) : (
               <Button
                 onClick={() => setShowApplicationForm(true)}

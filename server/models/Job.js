@@ -41,12 +41,30 @@ const jobSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  isTemplate: {
+    type: Boolean,
+    default: false,
+  },
+  templateName: {
+    type: String,
+  },
+  scheduledAt: {
+    type: Date,
+  },
   status: {
     type: String,
-    enum: ["active", "closed"],
+    enum: ["active", "inactive", "scheduled", "closed"],
     default: "active",
   },
+  posted_date: {
+    type: Date,
+    default: Date.now,
+  },
   createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
     type: Date,
     default: Date.now,
   },

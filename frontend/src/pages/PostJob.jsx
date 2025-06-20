@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { jobService } from "../services/jobService";
@@ -15,6 +15,7 @@ import {
 } from "../components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "../hooks/useAuth";
+import { Badge } from "../components/ui/badge";
 
 export default function PostJob() {
   const navigate = useNavigate();
@@ -33,6 +34,11 @@ export default function PostJob() {
     requirements: "",
     skills: "",
   });
+  const [templates, setTemplates] = useState([]);
+  const [templateName, setTemplateName] = useState("");
+  const [bulkFile, setBulkFile] = useState(null);
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [message, setMessage] = useState("");
 
   const postJobMutation = useMutation({
     mutationFn: (data) => {
@@ -55,6 +61,15 @@ export default function PostJob() {
       );
     },
   });
+
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
+  const loadTemplates = async () => {
+    const res = await jobService.getJobTemplates();
+    setTemplates(res.data);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -121,6 +136,36 @@ export default function PostJob() {
 
     console.log("Submitting job data:", jobData);
     postJobMutation.mutate(jobData);
+  };
+
+  const handleTemplateSave = async () => {
+    await jobService.createJobTemplate(templateName, formData);
+    setTemplateName("");
+    loadTemplates();
+    setMessage("Template saved!");
+  };
+
+  const handleTemplateApply = (tpl) => {
+    setFormData({
+      ...tpl,
+      templateName: undefined,
+      isTemplate: undefined,
+      _id: undefined,
+    });
+  };
+
+  const handleBulkImport = async () => {
+    if (!bulkFile) return;
+    await jobService.bulkImportJobs(bulkFile);
+    setBulkFile(null);
+    setMessage("Bulk import successful!");
+  };
+
+  const handleSchedule = async () => {
+    if (!scheduledAt) return;
+    // Assume job is already created and has an _id
+    await jobService.scheduleJob(formData._id, scheduledAt);
+    setMessage("Job scheduled!");
   };
 
   // Redirect if user is not an employer
@@ -333,6 +378,55 @@ export default function PostJob() {
             </Button>
           </div>
         </form>
+      </div>
+
+      <div className="mt-4 p-6 bg-white rounded-lg shadow-sm">
+        <h2 className="text-2xl font-bold mb-4">Job Templates</h2>
+        <div className="mb-4">
+          <Input
+            placeholder="Template Name"
+            value={templateName}
+            onChange={(e) => setTemplateName(e.target.value)}
+          />
+          <Button onClick={handleTemplateSave}>Save as Template</Button>
+        </div>
+        <div className="mb-4">
+          <h3 className="font-semibold mb-2">Templates</h3>
+          <div className="flex flex-wrap gap-2">
+            {templates.map((tpl) => (
+              <Badge
+                key={tpl._id}
+                className="cursor-pointer"
+                onClick={() => handleTemplateApply(tpl)}
+              >
+                {tpl.templateName}
+              </Badge>
+            ))}
+          </div>
+        </div>
+        <div className="mb-4">
+          <h3 className="font-semibold mb-2">Bulk Import</h3>
+          <Input
+            type="file"
+            accept=".csv"
+            onChange={(e) => setBulkFile(e.target.files[0])}
+          />
+          <Button onClick={handleBulkImport} className="mt-2">
+            Import
+          </Button>
+        </div>
+        <div className="mb-4">
+          <h3 className="font-semibold mb-2">Schedule Job Posting</h3>
+          <Input
+            type="datetime-local"
+            value={scheduledAt}
+            onChange={(e) => setScheduledAt(e.target.value)}
+          />
+          <Button onClick={handleSchedule} className="mt-2">
+            Schedule
+          </Button>
+        </div>
+        {message && <div className="mt-4 text-green-600">{message}</div>}
       </div>
     </div>
   );

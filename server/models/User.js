@@ -61,6 +61,22 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  skills: {
+    type: String,
+    default: "",
+  },
+  experience: {
+    type: String,
+    default: "",
+  },
+  salaryExpectations: {
+    type: String,
+    default: "",
+  },
+  location: {
+    type: String,
+    default: "",
+  },
 });
 
 // Hash password before saving

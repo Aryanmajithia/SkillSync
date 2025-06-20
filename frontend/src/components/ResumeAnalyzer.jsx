@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { aiService } from "../services/aiService";
+import { analyzeResume } from "../services/aiService";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import {
@@ -25,7 +25,7 @@ const ResumeAnalyzer = ({ onAnalysisComplete }) => {
 
   const analyzeResume = useMutation({
     mutationFn: async (file) => {
-      const result = await aiService.analyzeResume(file);
+      const result = await analyzeResume(file);
       return result;
     },
     onSuccess: (data) => {

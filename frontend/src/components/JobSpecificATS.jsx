@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { aiService } from "../services/aiService";
+import { analyzeJobMatch } from "../services/aiService";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
@@ -14,9 +14,9 @@ const JobSpecificATS = ({ resumeAnalysis }) => {
   const [analysisResult, setAnalysisResult] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const analyzeJobMatch = useMutation({
+  const analyzeJobMatchMutation = useMutation({
     mutationFn: async (data) => {
-      const result = await aiService.analyzeJobMatch(data);
+      const result = await analyzeJobMatch(data);
       return result;
     },
     onSuccess: (data) => {
@@ -36,7 +36,7 @@ const JobSpecificATS = ({ resumeAnalysis }) => {
 
     setIsAnalyzing(true);
     try {
-      await analyzeJobMatch.mutateAsync({
+      await analyzeJobMatchMutation.mutateAsync({
         jobTitle,
         jobDescription,
         resumeAnalysis,

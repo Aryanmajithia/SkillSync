@@ -21,26 +21,10 @@ const resumeAnalysisSchema = new mongoose.Schema({
     default: "general",
   },
   atsScore: {
-    overall: {
-      type: Number,
-      min: 0,
-      max: 100,
-    },
-    keywordMatch: {
-      type: Number,
-      min: 0,
-      max: 100,
-    },
-    formatting: {
-      type: Number,
-      min: 0,
-      max: 100,
-    },
-    readability: {
-      type: Number,
-      min: 0,
-      max: 100,
-    },
+    type: Number,
+    min: 0,
+    max: 100,
+    default: 0,
   },
   keywordAnalysis: {
     matched: [String],

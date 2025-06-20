@@ -106,7 +106,24 @@ router.post("/login", async (req, res) => {
 router.get("/me", auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select("-password");
-    res.json(user);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Return user with consistent structure (using 'id' instead of '_id')
+    res.json({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      skills: user.skills,
+      experience: user.experience,
+      location: user.location,
+      title: user.title,
+      preferences: user.preferences,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    });
   } catch (error) {
     res
       .status(500)

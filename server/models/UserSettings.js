@@ -34,6 +34,28 @@ const userSettingsSchema = new mongoose.Schema({
       default: true,
     },
   },
+  emailNotifications: {
+    applications: {
+      type: Boolean,
+      default: true,
+    },
+    interviews: {
+      type: Boolean,
+      default: true,
+    },
+    statusUpdates: {
+      type: Boolean,
+      default: true,
+    },
+    jobMatches: {
+      type: Boolean,
+      default: true,
+    },
+    weeklyDigest: {
+      type: Boolean,
+      default: true,
+    },
+  },
   preferences: {
     jobSearch: {
       preferredLocations: [String],

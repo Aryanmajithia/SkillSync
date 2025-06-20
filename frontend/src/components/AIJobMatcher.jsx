@@ -1,7 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { aiService } from "../services/aiService";
+import { getJobRecommendations } from "../services/aiService";
 import { useAuth } from "../hooks/useAuth";
 import { Briefcase, Star, MapPin, DollarSign } from "lucide-react";
 
@@ -16,7 +16,7 @@ const AIJobMatcher = () => {
     queryKey: ["aiJobMatches", user?.id],
     queryFn: async () => {
       try {
-        const result = await aiService.getJobRecommendations(user?.id);
+        const result = await getJobRecommendations(user?.id);
         return Array.isArray(result) ? result : [];
       } catch (error) {
         console.error("Error fetching AI job matches:", error);

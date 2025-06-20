@@ -19,7 +19,7 @@ export default function Jobs() {
   const { user } = useAuth();
 
   const {
-    data: jobs = [],
+    data: jobsData = { jobs: [] },
     isLoading,
     error,
   } = useQuery({
@@ -30,6 +30,9 @@ export default function Jobs() {
         : jobService.getJobs(filters),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  // Extract jobs array from the response
+  const jobs = jobSource === "external" ? jobsData : jobsData.jobs || jobsData;
 
   const handleSearch = (searchParams) => {
     setFilters(searchParams);
@@ -116,132 +119,41 @@ export default function Jobs() {
                 key={job.id || job._id || `job-${Math.random()}`}
                 className="block bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-100"
               >
-                {jobSource === "internal" && job._id ? (
-                  <Link to={`/jobs/${job._id}`}>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-xl font-semibold text-gray-900">
-                          {job.title}
-                        </h3>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {job.company}
-                        </p>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {job.location}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <span className="inline-block px-3 py-1 text-sm font-semibold text-blue-600 bg-blue-100 rounded-full capitalize">
-                          {job.type.replace("-", " ")}
-                        </span>
-                        {job.salary && (
-                          <p className="text-lg font-bold text-gray-900 mt-2">
-                            ${job.salary.min?.toLocaleString()} - $
-                            {job.salary.max?.toLocaleString()}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="mt-4">
-                      <p className="text-gray-600 line-clamp-2">
-                        {job.description}
+                <Link to={`/jobs/${job._id || job.id}`}>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900">
+                        {job.title}
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {job.company}
+                      </p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {job.location}
                       </p>
                     </div>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {job.skills?.slice(0, 3).map((skill) => (
-                        <span
-                          key={skill}
-                          className="px-3 py-1 text-sm text-gray-600 bg-gray-100 rounded-full"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                      {job.skills?.length > 3 && (
-                        <span className="px-3 py-1 text-sm text-gray-500 bg-gray-50 rounded-full">
-                          +{job.skills.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
-                      <span>
-                        Posted {new Date(job.createdAt).toLocaleDateString()}
+                    <div className="text-right">
+                      <span className="inline-block px-3 py-1 text-sm font-semibold text-blue-600 bg-blue-100 rounded-full capitalize">
+                        {job.type?.replace("-", " ") ||
+                          job.job_type?.replace("-", " ") ||
+                          "Full Time"}
                       </span>
-                      <span className="capitalize">{job.experience} level</span>
-                    </div>
-                  </Link>
-                ) : (
-                  <div>
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="text-xl font-semibold text-gray-900">
-                          {job.title}
-                        </h3>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {job.company}
+                      {job.salary && (
+                        <p className="text-lg font-bold text-gray-900 mt-2">
+                          {typeof job.salary === "string"
+                            ? job.salary
+                            : `$${job.salary.min?.toLocaleString()} - $${job.salary.max?.toLocaleString()}`}
                         </p>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {job.location}
-                        </p>
-                        {job.source && (
-                          <span className="inline-block px-2 py-1 text-xs text-gray-500 bg-gray-100 rounded mt-1">
-                            {job.source}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <span className="inline-block px-3 py-1 text-sm font-semibold text-green-600 bg-green-100 rounded-full capitalize">
-                          {job.job_type?.replace("-", " ") || "Full Time"}
-                        </span>
-                        {job.salary && (
-                          <p className="text-lg font-bold text-gray-900 mt-2">
-                            {job.salary}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="mt-4">
-                      <p className="text-gray-600 line-clamp-2">
-                        {job.description}
-                      </p>
-                    </div>
-                    {job.requirements && job.requirements.length > 0 && (
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {job.requirements.slice(0, 3).map((req, index) => (
-                          <span
-                            key={index}
-                            className="px-3 py-1 text-sm text-gray-600 bg-gray-100 rounded-full"
-                          >
-                            {req}
-                          </span>
-                        ))}
-                        {job.requirements.length > 3 && (
-                          <span className="px-3 py-1 text-sm text-gray-500 bg-gray-50 rounded-full">
-                            +{job.requirements.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    )}
-                    <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
-                      <span>
-                        {job.posted_date &&
-                          `Posted ${new Date(
-                            job.posted_date
-                          ).toLocaleDateString()}`}
-                      </span>
-                      {job.url && (
-                        <a
-                          href={job.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800"
-                        >
-                          <span>Apply</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
                       )}
                     </div>
                   </div>
-                )}
+                  <div className="mt-4">
+                    <p className="text-gray-600 line-clamp-2">
+                      {job.description}
+                    </p>
+                  </div>
+                  {/* Add more job info as needed */}
+                </Link>
               </div>
             ))}
           </div>

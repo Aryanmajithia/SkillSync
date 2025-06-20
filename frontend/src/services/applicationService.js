@@ -1,23 +1,42 @@
 import api from "../lib/axios";
 
 export const applicationService = {
+  // Check server health
+  checkServerHealth: async () => {
+    try {
+      const response = await api.get("/health");
+      return response.data;
+    } catch (error) {
+      console.error("Server health check failed:", error);
+      throw error;
+    }
+  },
+
   // Submit job application
   submitApplication: async (applicationData) => {
-    const formData = new FormData();
+    console.log(
+      "applicationService.submitApplication called with:",
+      applicationData
+    );
+    console.log("applicationData type:", typeof applicationData);
+    console.log(
+      "applicationData constructor:",
+      applicationData.constructor.name
+    );
 
-    // Append all form data
-    Object.keys(applicationData).forEach((key) => {
-      if (applicationData[key] !== null && applicationData[key] !== undefined) {
-        formData.append(key, applicationData[key]);
-      }
-    });
-
-    const response = await api.post("/api/applications", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    return response.data;
+    try {
+      const response = await api.post("/api/applications", applicationData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      console.log("API response:", response);
+      return response.data;
+    } catch (error) {
+      console.error("API error:", error);
+      console.error("Error response:", error.response);
+      throw error;
+    }
   },
 
   // Get user's applications
